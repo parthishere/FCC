@@ -1,6 +1,7 @@
 program     -> statement* EOF
-statement   -> varDecl | exprStmt | printStmt | blockStmt | ifStmt | breakStmt | contStmt | funDecl
-funDecl     -> "fun" IDENTIFIER "(" IDENTIFIER ("," IDENTIFIER)* ) blockStmt
+statement   -> varDecl | exprStmt | printStmt | blockStmt | ifStmt | breakStmt | contStmt | funDeclStmt | returnStmt
+returnStmt  -> "return" expression? ";"
+funDeclStmt -> "fun" IDENTIFIER "(" IDENTIFIER ("," IDENTIFIER)* ) blockStmt
 varDecl     -> "var" IDENTIFIER ( "=" )
 exprStmt    -> expression ";"
 printStmt   -> "print" expression ";"

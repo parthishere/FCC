@@ -17,12 +17,17 @@ class FCFunction(FCCallable):
         self.declaration = declaration
 
     def call(self, interpreter, arguments:list):
+        from .interpreter import returnException
+
         environment = Environment(interpreter.global_env)   
 
         for index, param in enumerate(self.declaration.parameters):
             environment.define(param.value, arguments[index])
 
-        interpreter.execute_blockstmt(self.declaration.body, environment)
+        try:
+            interpreter.execute_blockstmt(self.declaration.body, environment)
+        except returnException as return_value:
+            return return_value
 
     def arity(self):
         return len(self.declaration.parameters)

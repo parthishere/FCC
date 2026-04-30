@@ -19,7 +19,8 @@ from .statements import (
     WhileStmt,
     BreakStmt,
     ContStmt,
-    FunDeclStmt
+    FunDeclStmt,
+    ReturnStmt
 )
 from .helper import Token, TokenType
 from .environment import Environment
@@ -32,6 +33,10 @@ class breakException(Exception):
     pass
 
 class contException(Exception):
+    """Exception raised for continue encounter."""
+    pass
+
+class returnException(Exception):
     """Exception raised for continue encounter."""
     pass
 
@@ -79,6 +84,8 @@ class Interpret:
                 self.execute_contstmt(stmt)
             case FunDeclStmt():
                 self.execute_fundeclstmt(stmt)
+            case ReturnStmt():
+                self.execute_returnstmt(stmt)
             case _:
                 self.error(stmt, "Invalid statement")
             
@@ -86,6 +93,12 @@ class Interpret:
         function = FCFunction(stmt)
         self.environment.define(stmt.name.value, function)
         return None
+    
+    def execute_returnstmt(self, stmt:ReturnStmt):
+        value = None
+        if stmt.value:
+            value = self.evaluate(stmt.value)
+        raise returnException(value)
     
     def execute_printstmt(self, stmt:PrintStmt):
         value = self.evaluate(stmt.expr)

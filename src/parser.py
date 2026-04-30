@@ -20,7 +20,8 @@ from .statements import (
     WhileStmt,
     BreakStmt,
     ContStmt,
-    FunDeclStmt
+    FunDeclStmt,
+    ReturnStmt
 )
 
 MAX_FUNC_ARGUMENTS = 255
@@ -68,6 +69,8 @@ class Paser:
             return self.contStatement()
         if self.match([TokenType.FUN]):
             return self.funcDeclStatement()
+        if self.match([TokenType.RETURN]):
+            return self.returnStatement()
         if self.match([TokenType.COMMENT]):
             return None
         if self.match([TokenType.MULTILINE_COMMENT]):
@@ -188,11 +191,21 @@ class Paser:
 
         return FunDeclStmt(callee, parameters, body)
     
+    def returnStatement(self):
+        keyword = self.previous() # consuming return for return; statement
+        value = None;
+        if not self.check(TokenType.SEMICOLON):
+            value = self.expression()
+        
+        self.consume(TokenType.SEMICOLON, "exptected Semicolon after return");
+        return ReturnStmt(keyword, value)
+    
     def validate(self):
         if not self.isAtEnd():
             self.error(self.peek(), "Unexpected Token !")
             return False
         return True
+    
         
     def expression(self):
         return self.assignment()
