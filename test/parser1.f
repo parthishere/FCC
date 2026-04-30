@@ -86,15 +86,8 @@ print bhakti;
 
 print "complex function and return value check";
 fun makeCounter() {
-  var i = 0;
-  fun count() {
-    i = i + 1;
-    print i;
-  }
-
-  return count;
+  print 1;
+  return 1;
 }
 
-var counter = makeCounter();
-print counter(); // "1".
-print counter(); // "2".
+makeCounter();

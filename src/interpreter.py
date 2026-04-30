@@ -56,13 +56,14 @@ class Interpret:
          
     def interpret(self) -> None:
         statement = None
-        try:
-            for statement in self.statements:
-                self.execute(statement)
-                if self.has_error:
-                    return
-        except Exception:
-            self.has_error = True
+        # try:   
+        for statement in self.statements:
+            self.execute(statement)
+            if self.has_error:
+                return
+        # except Exception:
+        #     print ("exception occured")
+        #     self.has_error = True
         
     def execute(self, stmt: PrintStmt | ExprStmt | VarDeclStmt | BlockStmt | IfStmt | WhileStmt | FunDeclStmt):
         match stmt:
@@ -116,12 +117,12 @@ class Interpret:
             parent_env = self.environment
 
         child_env = Environment(parent = parent_env)
-        try:
-            self.environment = child_env
-            for statement in stmt.statments:
-                self.execute(statement)
-        finally:
-            self.environment = parent_env
+        
+        self.environment = child_env
+        for statement in stmt.statments:
+            self.execute(statement)
+
+        self.environment = parent_env
         return None
 
     def execute_vardeclstmt(self, var:VarDeclStmt):
@@ -182,7 +183,7 @@ class Interpret:
         for arg in expr.args:
             arguments.append(self.evaluate(arg))
 
-        if not isinstance(callee, FCCallable):
+        if not isinstance(callee, (FCCallable, FCFunction)):
             self.error(expr, "can only call function and classes")
 
         if (len(arguments) != callee.arity()):

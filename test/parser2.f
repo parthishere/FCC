@@ -1,7 +1,13 @@
-fun sayHi(first, last) {
-  print first + " " + last;
-  return 1;
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+
+  return count;
 }
 
-var lessay = sayHi("Dear", "Reader");
-print lessay;
+var counter = makeCounter();
+counter(); 
+counter(); 

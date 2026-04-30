@@ -27,8 +27,8 @@ class FCFunction(FCCallable):
 
         try:
             interpreter.execute_blockstmt(self.declaration.body, environment)
-        except returnException as return_value:
-            return return_value
+        except returnException as e:
+            return e.args[0]
 
     def arity(self):
         return len(self.declaration.parameters)
