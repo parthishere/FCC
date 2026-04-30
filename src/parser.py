@@ -1,14 +1,17 @@
 from .helper import Token, TokenType
 from .expressions import (
+    Expr,
     Binary, 
     Unary, 
     Grouping,
     Literal,
     Identifier, 
     Assignment,
-    Logical
+    Logical,
+    Call
 )
 from .statements import (
+    Stmt,
     PrintStmt, 
     ExprStmt, 
     VarDeclStmt,
@@ -16,9 +19,11 @@ from .statements import (
     IfStmt,
     WhileStmt,
     BreakStmt,
-    ContStmt
+    ContStmt,
+    FunDeclStmt
 )
 
+MAX_FUNC_ARGUMENTS = 255
 
 class Paser:
     def __init__(self, tokens:list[Token], source:str, filepath:str):
@@ -61,6 +66,8 @@ class Paser:
             return self.breakStatement()
         if self.match([TokenType.CONTINUE]):
             return self.contStatement()
+        if self.match([TokenType.FUN]):
+            return self.funcDeclStatement()
         if self.match([TokenType.COMMENT]):
             return None
         if self.match([TokenType.MULTILINE_COMMENT]):
@@ -160,9 +167,30 @@ class Paser:
         self.consume(TokenType.SEMICOLON, "Expected Semicolon after continue");
         return ContStmt()
     
+    def funcDeclStatement(self):
+        callee = self.consume(TokenType.IDENTIFIER, "expected Identifier for function declaration")
+        self.consume(TokenType.OPEN_PAR, f"expect ( after {callee} name")
+        parameters = []
+
+        if not self.check(TokenType.CLOSE_PAR):
+            while True:
+                if len(parameters) > MAX_FUNC_ARGUMENTS:
+                    self.error(self.peek(), "parameters len can not exceeds 255")
+                
+                parameters.append(self.consume(TokenType.IDENTIFIER, "expect parameter value"))
+                if not self.match([TokenType.COMMA]):
+                    break
+
+        self.consume(TokenType.CLOSE_PAR, "Expected ) after parameters")
+        self.consume(TokenType.OPEN_BRACE, "Expect '{' before function body.")
+
+        body = self.blockStatement()
+
+        return FunDeclStmt(callee, parameters, body)
+    
     def validate(self):
         if not self.isAtEnd():
-            self.error(self.peek(), "Unexpected Token")
+            self.error(self.peek(), "Unexpected Token !")
             return False
         return True
         
@@ -258,7 +286,36 @@ class Paser:
             right = self.unary();
             expr = Unary(operator, right)
             return expr
-        return self.primary()
+        return self.call()
+    
+    def call(self):
+        expr = self.primary()
+
+        while True:
+            if self.match([TokenType.OPEN_PAR]):
+                expr = self.finishCall(expr)
+            else:
+                break
+
+        return expr
+    
+    def finishCall(self, callee:Expr):
+        arguments = []
+        if not self.check(TokenType.CLOSE_PAR):
+            while True:
+                if len(arguments) > 255:
+                    self.error(self.peek(), "can not have more than 255 arguments")
+
+                arguments.append(self.expression())
+
+                if self.match([TokenType.COMMA]):
+                    continue
+                else:
+                    break
+
+        parenthesis = self.consume(TokenType.CLOSE_PAR, "expected ( after function args")
+
+        return Call(callee, parenthesis, arguments)
 
     def primary(self):
         if self.match([TokenType.TRUE]):

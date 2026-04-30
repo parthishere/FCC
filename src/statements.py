@@ -1,4 +1,5 @@
 from .expressions import Expr
+from .helper import Token
 
 class Stmt:
     def __init__(self):
@@ -64,3 +65,12 @@ class ContStmt(Stmt):
 
     def __repr__(self):
         return f"Continue" 
+    
+class FunDeclStmt(Stmt):
+    def __init__(self, name:Token, parameters:list[Token], body:BlockStmt):
+        self.name = name
+        self.parameters = parameters
+        self.body = body
+
+    def __repr__(self):
+        return f"( FunDecl {self.name} {self.parameters} : {self.body} )" 

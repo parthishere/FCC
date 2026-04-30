@@ -1,5 +1,6 @@
 program     -> statement* EOF
-statement   -> varDecl | exprStmt | printStmt | blockStmt | ifStmt | breakStmt | contStmt
+statement   -> varDecl | exprStmt | printStmt | blockStmt | ifStmt | breakStmt | contStmt | funDecl
+funDecl     -> "fun" IDENTIFIER "(" IDENTIFIER ("," IDENTIFIER)* ) blockStmt
 varDecl     -> "var" IDENTIFIER ( "=" )
 exprStmt    -> expression ";"
 printStmt   -> "print" expression ";"
@@ -19,6 +20,6 @@ comparison  -> term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term        -> factor ( ( "-" | "+" ) factor )* 
 factor      -> unary ( ( "/" | "*" ) unary )* 
 unary       -> ( "-" | "!" ) unary | call
-call        -> primary ( "(" arguments ")")*
+call        -> primary ( "(" arguments? ")")*
 arguments   -> expression ( "," expression )*
 primary     -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER

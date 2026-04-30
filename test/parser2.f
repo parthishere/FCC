@@ -1,15 +1,5 @@
-var a = 10;
-for (var i = 0; i < a; i = i + 1){
-    print i;
+fun sayHi(first, last) {
+  print first + " " + last;
 }
-a = "parth";
-print a;
 
-a = 10;
-print a;
-
-a = 1 + 2 + 3 * 4 / 2 + 2;
-print a;
-
-a = "parth";
-print a;
+sayHi("Dear", "Reader");

@@ -69,3 +69,11 @@ class Assignment(Expr):
     def __repr__(self):
         return f"( VarAssign {self.name} = {self.value} )"
     
+class Call(Expr):
+    def __init__(self, callee:Expr, parenthesis:Token, args:list[Expr]):
+        self.callee = callee
+        self.parenthesis = parenthesis
+        self.args = args
+
+    def __repr__(self):
+        return f"( Call {self.callee} {self.parenthesis} {self.args} )"

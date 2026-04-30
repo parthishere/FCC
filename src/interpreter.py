@@ -6,7 +6,8 @@ from .expressions import (
     Grouping, 
     Identifier, 
     Assignment,
-    Logical
+    Logical,
+    Call
 )
 from .statements import (
     Stmt, 
@@ -17,10 +18,14 @@ from .statements import (
     IfStmt,
     WhileStmt,
     BreakStmt,
-    ContStmt
+    ContStmt,
+    FunDeclStmt
 )
 from .helper import Token, TokenType
 from .environment import Environment
+from .callable import FCCallable, FCFunction
+from .inbuilts import Clock
+
 
 class breakException(Exception):
     """Exception raised for break encounter."""
@@ -31,12 +36,18 @@ class contException(Exception):
     pass
 
 class Interpret:
+    
     def __init__(self, statements:list[Stmt], source:str="", filepath:str=""):
         self.statements = statements
         self.source = source
         self.filepath = filepath
-        self.environment = Environment()
+        self.global_env = Environment()
+        self.environment = self.global_env
         self.has_error = False
+
+        #defining clock class as inbuilt function
+        self.global_env.define("clock", Clock)
+
          
     def interpret(self) -> None:
         statement = None
@@ -48,7 +59,7 @@ class Interpret:
         except Exception:
             self.has_error = True
         
-    def execute(self, stmt: PrintStmt | ExprStmt | VarDeclStmt | BlockStmt | IfStmt | WhileStmt):
+    def execute(self, stmt: PrintStmt | ExprStmt | VarDeclStmt | BlockStmt | IfStmt | WhileStmt | FunDeclStmt):
         match stmt:
             case PrintStmt():
                 self.execute_printstmt(stmt)
@@ -66,9 +77,16 @@ class Interpret:
                 self.execute_breakstmt(stmt)
             case ContStmt():
                 self.execute_contstmt(stmt)
+            case FunDeclStmt():
+                self.execute_fundeclstmt(stmt)
             case _:
                 self.error(stmt, "Invalid statement")
             
+    def execute_fundeclstmt(self, stmt:FunDeclStmt):
+        function = FCFunction(stmt)
+        self.environment.define(stmt.name.value, function)
+        return None
+    
     def execute_printstmt(self, stmt:PrintStmt):
         value = self.evaluate(stmt.expr)
         print(str(value))
@@ -78,8 +96,12 @@ class Interpret:
         value = self.evaluate(stmt.expr)
         return None
     
-    def execute_blockstmt(self, stmt:BlockStmt):
-        parent_env = self.environment
+    def execute_blockstmt(self, stmt:BlockStmt, envr:Environment=None):
+        if envr:
+            parent_env = envr
+        else:
+            parent_env = self.environment
+
         child_env = Environment(parent = parent_env)
         try:
             self.environment = child_env
@@ -119,7 +141,7 @@ class Interpret:
     def execute_contstmt(self, stmt:BreakStmt):
         raise contException("continue")
 
-    def evaluate(self, expr:Binary | Unary | Literal | Grouping | Identifier | Assignment):
+    def evaluate(self, expr:Binary | Unary | Literal | Grouping | Identifier | Assignment | Call):
         match expr:
             case Binary():
                 return self.evaluate_binary(expr)
@@ -135,10 +157,25 @@ class Interpret:
                 return self.evaluate_assign(expr)
             case Logical():
                 return self.evaluate_logical(expr)
+            case Call():
+                return self.evaluate_call(expr)
             case _:
                 return self.error(expr, "Unknown Type")
+    
+    def evaluate_call(self, expr:Call):
+        callee = self.evaluate(expr.callee)
 
-        
+        arguments = []
+        for arg in expr.args:
+            arguments.append(self.evaluate(arg))
+
+        if not isinstance(callee, FCCallable):
+            self.error(expr, "can only call function and classes")
+
+        if (len(arguments) != callee.arity()):
+            self.error(expr, f"expected {callee.arity()} args but got {len(arguments())}")
+        return callee.call(self, arguments)
+    
     def evaluate_logical(self, expr:Logical):
         left = self.evaluate(expr.left)
 
@@ -170,6 +207,8 @@ class Interpret:
             case TokenType.PLUS:
                 if self.int_args(left, right):
                     return left + right
+                if self.str_args(left, right):
+                    return str(left + right)
                 self.error(expr, "Can not add not int")
             case TokenType.STAR:
                 if self.int_args(left, right):
