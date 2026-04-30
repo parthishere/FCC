@@ -13,13 +13,14 @@ class FCCallable:
         return 0
 
 class FCFunction(FCCallable):
-    def __init__(self, declaration:FunDeclStmt):
+    def __init__(self, declaration:FunDeclStmt, closure:Environment):
         self.declaration = declaration
+        self.closure = closure
 
     def call(self, interpreter, arguments:list):
         from .interpreter import returnException
 
-        environment = Environment(interpreter.global_env)   
+        environment = Environment(self.closure)   
 
         for index, param in enumerate(self.declaration.parameters):
             environment.define(param.value, arguments[index])

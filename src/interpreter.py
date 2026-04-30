@@ -90,7 +90,7 @@ class Interpret:
                 self.error(stmt, "Invalid statement")
             
     def execute_fundeclstmt(self, stmt:FunDeclStmt):
-        function = FCFunction(stmt)
+        function = FCFunction(stmt, self.environment)
         self.environment.define(stmt.name.value, function)
         return None
     
@@ -222,7 +222,7 @@ class Interpret:
                     return left + right
                 if self.str_args(left, right):
                     return str(left + right)
-                self.error(expr, "Can not add not int")
+                self.error(expr, f"Can not add not int {left} + {right}")
             case TokenType.STAR:
                 if self.int_args(left, right):
                     return left * right
