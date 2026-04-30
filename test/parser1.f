@@ -83,11 +83,17 @@ for (var b = 1; b < 10; b = b + 1) {
 var bhakti = -(1 + 2) * 3 == 9 - (4 + 5); // False
 print bhakti;
 
-
 print "complex function and return value check";
 fun makeCounter() {
-  print 1;
-  return 1;
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+
+  return count;
 }
 
-makeCounter();
+var counter = makeCounter();
+counter(); 
+counter(); 
