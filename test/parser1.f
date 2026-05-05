@@ -83,6 +83,13 @@ for (var b = 1; b < 10; b = b + 1) {
 var bhakti = -(1 + 2) * 3 == 9 - (4 + 5); // False
 print bhakti;
 
+print "try";
+fun scope(a) {
+  var a = "local";
+  print a;
+}
+scope("global");
+
 print "complex function and return value check";
 fun makeCounter() {
   var i = 0;

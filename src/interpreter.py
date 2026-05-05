@@ -25,7 +25,7 @@ from .statements import (
 from .helper import Token, TokenType
 from .environment import Environment
 from .callable import FCCallable, FCFunction
-from .inbuilts import Clock
+from .inbuilts import ClockMS
 
 
 class breakException(Exception):
@@ -47,11 +47,11 @@ class Interpret:
         self.source = source
         self.filepath = filepath
         self.global_env = Environment()
+        #defining clock class as inbuilt function
+        self.global_env.define("clock_ms", ClockMS())
         self.environment = self.global_env
         self.has_error = False
 
-        #defining clock class as inbuilt function
-        self.global_env.define("clock", Clock)
 
          
     def interpret(self) -> None:
