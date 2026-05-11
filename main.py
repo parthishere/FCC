@@ -26,7 +26,7 @@ def main(file_path):
                 return
 
             stmts = ps.parse()
-            # print(stmts)
+            print(stmts)
             ps.validate()
 
             ip = Interpret(stmts, content, file_path)

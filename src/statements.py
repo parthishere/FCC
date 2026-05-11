@@ -73,7 +73,7 @@ class FunDeclStmt(Stmt):
         self.body = body
 
     def __repr__(self):
-        return f"( FunDecl {self.name} {self.parameters} : {self.body} )" 
+        return f"( FunDecl {self.parameters} : {self.body} )" 
     
 class ReturnStmt(Stmt):
     def __init__(self, keyword, value):

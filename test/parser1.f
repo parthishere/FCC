@@ -91,6 +91,8 @@ fun scope(a) {
 scope("global");
 
 print "complex function and return value check";
+
+var start = clock_ms();
 fun makeCounter() {
   var i = 0;
   fun count() {
@@ -104,3 +106,5 @@ fun makeCounter() {
 var counter = makeCounter();
 counter(); 
 counter(); 
+var end = clock_ms();
+print end - start;

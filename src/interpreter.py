@@ -25,7 +25,11 @@ from .statements import (
 from .helper import Token, TokenType
 from .environment import Environment
 from .callable import FCCallable, FCFunction
-from .inbuilts import ClockMS
+from .inbuilts import (
+    ClockMS,
+    ClockUS,
+    ClockNS
+)
 
 
 class breakException(Exception):
@@ -47,23 +51,22 @@ class Interpret:
         self.source = source
         self.filepath = filepath
         self.global_env = Environment()
+        
         #defining clock class as inbuilt function
-        self.global_env.define("clock_ms", ClockMS())
+        self.global_env.define(ClockMS.name, ClockMS())
+        self.global_env.define(ClockUS.name, ClockUS())
+        self.global_env.define(ClockNS.name, ClockNS())
+
         self.environment = self.global_env
         self.has_error = False
 
-
-         
     def interpret(self) -> None:
         statement = None
-        # try:   
+
         for statement in self.statements:
             self.execute(statement)
             if self.has_error:
                 return
-        # except Exception:
-        #     print ("exception occured")
-        #     self.has_error = True
         
     def execute(self, stmt: PrintStmt | ExprStmt | VarDeclStmt | BlockStmt | IfStmt | WhileStmt | FunDeclStmt):
         match stmt:
@@ -111,7 +114,12 @@ class Interpret:
         return None
     
     def execute_blockstmt(self, stmt:BlockStmt, envr:Environment=None):
-        if envr:
+        previous_env = self.environment
+
+        if envr is not None:
+            # when you pass environment that would the parent env but
+            # after execution what would be the env ?
+            # it should be self.environment not envr
             parent_env = envr
         else:
             parent_env = self.environment
@@ -119,10 +127,12 @@ class Interpret:
         child_env = Environment(parent = parent_env)
         
         self.environment = child_env
-        for statement in stmt.statments:
-            self.execute(statement)
+        try:
+            for statement in stmt.statments:
+                self.execute(statement)
+        finally:
+            self.environment = previous_env
 
-        self.environment = parent_env
         return None
 
     def execute_vardeclstmt(self, var:VarDeclStmt):
@@ -130,6 +140,7 @@ class Interpret:
         if var.initializer is not None:
             value = self.evaluate(var.initializer)
         self.environment.define(var.name, value)
+
 
     def execute_ifstmt(self, stmt:IfStmt):
         if self.evaluate(stmt.condition):
