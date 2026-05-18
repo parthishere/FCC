@@ -54,7 +54,7 @@ class Grouping(Expr):
     def __repr__(self):
         return f"( Group {self.expr} )"
 
-class Identifier(Expr):
+class Variable(Expr):
     def __init__(self, token:Token):
         self.token = token
 

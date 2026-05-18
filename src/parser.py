@@ -5,7 +5,7 @@ from .expressions import (
     Unary, 
     Grouping,
     Literal,
-    Identifier, 
+    Variable, 
     Assignment,
     Logical,
     Call
@@ -28,14 +28,14 @@ MAX_FUNC_ARGUMENTS = 255
 
 class Paser:
     def __init__(self, tokens:list[Token], source:str, filepath:str):
-        self.tokens = tokens
-        self.current_token_index = 0
-        self.source = source
-        self.filename = filepath
-        self.has_error = False
+        self.tokens:list[Token] = tokens
+        self.current_token_index:int = 0
+        self.source:str = source
+        self.filename:str = filepath
+        self.has_error:bool = False
 
     def parse(self):
-        self.statements = []
+        self.statements:list[Stmt] = []
         try:
             while not self.isAtEnd():
                 stmt = self.statement()
@@ -50,7 +50,7 @@ class Paser:
         return self.statements
         
     
-    def statement(self):
+    def statement(self) -> Stmt:
         if self.match([TokenType.IF]):
             return self.ifStmt()
         if self.match([TokenType.WHILE]):
@@ -138,12 +138,12 @@ class Paser:
         return while_stmt
 
     def varDeclStatement(self):
-        name_token = self.consume(TokenType.IDENTIFIER, "Expect variable name").value
+        name = self.consume(TokenType.IDENTIFIER, "Expect variable name").value
         initializer = None
         if self.match([TokenType.EQUAL]):
             initializer = self.expression()
         self.consume(TokenType.SEMICOLON, "Expect ; after expression")
-        return VarDeclStmt(name_token, initializer)
+        return VarDeclStmt(name, initializer)
     
     def printStatement(self):
         value = self.expression()
@@ -218,7 +218,7 @@ class Paser:
             # calling assignment cause we want to support
             # a = b = c = 4 like this
             value = self.assignment()
-            if isinstance(expr, Identifier):
+            if isinstance(expr, Variable):
                 return Assignment(expr.token.value, value)
             
             self.error(self.peek(), "Invalid assignment target.")
@@ -342,7 +342,7 @@ class Paser:
             return Literal(self.previous().value)
         
         if self.match([TokenType.IDENTIFIER]):
-            return Identifier(self.previous())
+            return Variable(self.previous())
         
         if self.match([TokenType.OPEN_PAR]):
             expr = self.expression()

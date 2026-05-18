@@ -3,6 +3,7 @@ from src.scanner import Scanner
 from src.parser import Paser
 from src.helper import Token, TokenType
 from src.interpreter import Interpret
+from src.resolver import Resolver
 
 raw_filename_path = ""
 filename_ext = ""
@@ -15,22 +16,25 @@ def main(file_path):
         with open(file_path, 'r') as file:
             content = file.read()
             # print(content)
-            sc = Scanner(content, file_path)
-            sc.scanTokens()
+            scanner = Scanner(content, file_path)
+            scanner.scanTokens()
             # print(sc.tokens)
-            if(sc.has_error): 
+            if(scanner.has_error): 
                 return
 
-            ps = Paser(sc.tokens, content, file_path)
-            if(ps.has_error): 
+            parser = Paser(scanner.tokens, content, file_path)
+            if(parser.has_error): 
                 return
 
-            stmts = ps.parse()
-            print(stmts)
-            ps.validate()
+            statments = parser.parse()
+            print(statments)
+            parser.validate()
 
-            ip = Interpret(stmts, content, file_path)
-            ip.interpret()
+            interpreter = Interpret(statments, content, file_path)
+            resolver = Resolver(interpreter)
+            resolver.resolve(statments)
+
+            interpreter.interpret()
 
     except Exception as e:
         print(e)

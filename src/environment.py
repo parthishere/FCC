@@ -22,6 +22,9 @@ class Environment:
 
         raise Exception("Undefined Variable")
     
+    def assign_at(self, distance:int, name:str, value):
+        self.ancestor(distance).values[name] = value
+    
     def get(self, name):
         if name in self.values:
             return self.values.get(name)
@@ -30,3 +33,14 @@ class Environment:
             return self.parent.get(name)
 
         return None
+    
+    def get_at(self, name:str, distance:int):
+        return self.ancestor(distance).values[name]
+    
+    def ancestor(self, distance:int):
+        environment = self
+
+        for _ in range(distance):
+            environment = environment.parent
+
+        return environment

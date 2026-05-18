@@ -4,7 +4,7 @@ from .expressions import (
     Binary, 
     Literal, 
     Grouping, 
-    Identifier, 
+    Variable, 
     Assignment,
     Logical,
     Call
@@ -47,18 +47,20 @@ class returnException(Exception):
 class Interpret:
     
     def __init__(self, statements:list[Stmt], source:str="", filepath:str=""):
-        self.statements = statements
-        self.source = source
-        self.filepath = filepath
-        self.global_env = Environment()
+        self.statements:list[Stmt] = statements
+        self.source:str = source
+        self.filepath:str = filepath
+        self.global_env:Environment = Environment()
         
         #defining clock class as inbuilt function
         self.global_env.define(ClockMS.name, ClockMS())
         self.global_env.define(ClockUS.name, ClockUS())
         self.global_env.define(ClockNS.name, ClockNS())
 
-        self.environment = self.global_env
-        self.has_error = False
+        self.local_env:Environment = {}
+
+        self.environment:Environment = self.global_env
+        self.has_error:bool = False
 
     def interpret(self) -> None:
         statement = None
@@ -67,6 +69,9 @@ class Interpret:
             self.execute(statement)
             if self.has_error:
                 return
+            
+    def resolve(self, expr:Expr, depth:int):
+        self.local_env[expr] = depth
         
     def execute(self, stmt: PrintStmt | ExprStmt | VarDeclStmt | BlockStmt | IfStmt | WhileStmt | FunDeclStmt):
         match stmt:
@@ -141,7 +146,6 @@ class Interpret:
             value = self.evaluate(var.initializer)
         self.environment.define(var.name, value)
 
-
     def execute_ifstmt(self, stmt:IfStmt):
         if self.evaluate(stmt.condition):
             self.execute(stmt.thenBranch)
@@ -166,7 +170,7 @@ class Interpret:
     def execute_contstmt(self, stmt:BreakStmt):
         raise contException("continue")
 
-    def evaluate(self, expr:Binary | Unary | Literal | Grouping | Identifier | Assignment | Call):
+    def evaluate(self, expr:Binary | Unary | Literal | Grouping | Variable | Assignment | Call):
         match expr:
             case Binary():
                 return self.evaluate_binary(expr)
@@ -176,8 +180,8 @@ class Interpret:
                 return self.evaluate_grouping(expr)  
             case Literal():
                 return self.evaluate_literal(expr) 
-            case Identifier():
-                return self.evaluate_identifier(expr) 
+            case Variable():
+                return self.evaluate_variable(expr) 
             case Assignment():
                 return self.evaluate_assign(expr)
             case Logical():
@@ -216,7 +220,12 @@ class Interpret:
     
     def evaluate_assign(self, expr:Assignment):
         value = self.evaluate(expr.value)
-        self.environment.assign(expr.name, value)
+
+        distance = self.local_env.get(expr, None)
+        if distance:
+            self.environment.assign_at(distance, expr.name, value)
+        else:
+            self.global_env.assign(expr.name, value)
         return value
     
     def evaluate_binary(self, expr:Binary):
@@ -293,9 +302,17 @@ class Interpret:
     def evaluate_grouping(self, expr:Grouping):
         return self.evaluate(expr.expr)
     
-    def evaluate_identifier(self, expr:Identifier):
+    def evaluate_variable(self, expr:Variable):
+        self.lookup_variable(expr.token.value, expr)
         return self.environment.get(expr.token.value)
     
+    def lookup_variable(self, value:str, expr:Variable):
+        distance = self.local_env.get(value, None)
+        if distance:
+            return self.environment.get_at(value, distance)
+        else:
+            return self.global_env[value]
+
     def int_args(self, left, right):
         if left == None or right == None:
             return False
@@ -353,7 +370,7 @@ class Interpret:
                 return expr.operator
             case Logical():
                 return expr.operator
-            case Identifier():
+            case Variable():
                 return expr.token
             case Assignment():
                 return self.token_from_expr(expr.value)
